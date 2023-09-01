@@ -5,7 +5,10 @@ import time
 
 from paho.mqtt import client as mqtt_client
 
+CONFIGURE_ZOLDER = True
+CONFIGURE_SCHUUR = False
 
+assert (CONFIGURE_ZOLDER == False or CONFIGURE_SCHUUR == False)
 
 broker = '192.168.68.145'
 port = 1883
@@ -30,23 +33,18 @@ def connect_mqtt():
     client.connect(broker, port)
     return client
 
-def publish(topic, msg):
+def publish(topic, msg, retain = True):
     global client
-    result = client.publish(topic, msg)
+    result = client.publish(topic, msg, retain=retain)
     status = result[0]
     if status != 0:
         print(f"Failed to send message to topic {topic}")
 
-if False:
+if CONFIGURE_ZOLDER:
     dataTopic = "growatt-zolder"
     uniqueIdentifier = "a248"
     baseData = {
-        #"name": "PV2 power",
         "stat_t": f"{dataTopic}/data",
-        #"unit_of_meas": "W",
-        #"val_tpl": "{{value_json['pv2power']}}",
-        #"dev_cla": "power",
-        #"uniq_id": f"pv2-power-{uniqueIdentifier}",
         "dev": {
         "ids": [f"{dataTopic}-{uniqueIdentifier}"],
         "name": "Growatt (zolder)",
@@ -55,7 +53,7 @@ if False:
         },
         "stat_cla": "measurement"
     }
-else:
+if CONFIGURE_SCHUUR:
     dataTopic = "growatt-schuur"
     uniqueIdentifier = "4e6a"
     baseData = {
@@ -90,7 +88,7 @@ if __name__ == '__main__':
     client = connect_mqtt()
     client.loop_start()
 
-    if False:
+    if CONFIGURE_ZOLDER:
         publishConfigObject("PV1 voltage", "{{value_json['pv1voltage']}}", "voltage", "V")
         publishConfigObject("PV2 voltage", "{{value_json['pv2voltage']}}", "voltage", "V")
 
@@ -113,7 +111,7 @@ if __name__ == '__main__':
         publishConfigObject("Grid frequency",      "{{value_json['gridfrequency']}}",       "frequency", "Hz", "mdi:rotate-3d-variant")
 
         publishConfigObject("Temperature", "{{value_json['tempinverter']}}", "temperature", "°C")
-    else:
+    if CONFIGURE_SCHUUR:
         publishConfigObject("PV1 voltage", "{{value_json['pv1voltage']}}", "voltage", "V")
 
         publishConfigObject("PV1 current", "{{value_json['pv1current']}}", "current", "A")
